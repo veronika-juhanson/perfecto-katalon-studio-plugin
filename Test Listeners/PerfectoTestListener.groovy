@@ -44,27 +44,37 @@ class PerfectoTestListener {
 			if(runConfigName.toLowerCase().startsWith(PerfectoKeywords.PERFECTO_RUN_CONFIG_NAME)){
 				KeywordUtil.logInfo("[PERFECTO] Auto updating result status")
 				reportiumClient = (ReportiumClient)GlobalVariable.reportiumClient
-				try {
-					KeywordUtil.logInfo("Result link: " + reportiumClient.getReportUrl())
-					if (testCaseContext.getTestCaseStatus().equals("PASSED")) {
-						reportiumClient.testStop(TestResultFactory.createSuccess())
-					}else{
-						reportiumClient.testStop(TestResultFactory.createFailure(testCaseContext.getTestCaseStatus(), new Throwable(testCaseContext.getMessage())))
+				if(reportiumClient!=null) {
+					try {
+						KeywordUtil.logInfo("Result link: " + reportiumClient.getReportUrl())
+						if (testCaseContext.getTestCaseStatus().equals("PASSED")) {
+							reportiumClient.testStop(TestResultFactory.createSuccess())
+						}else{
+							reportiumClient.testStop(TestResultFactory.createFailure(testCaseContext.getTestCaseStatus(), new Throwable(testCaseContext.getMessage())))
+							KeywordUtil.logInfo("[PERFECTO] Registered a failed test")
+						}
+					} catch(org.openqa.selenium.NoSuchSessionException e) {
+						KeywordUtil.logInfo("[PERFECTO] report object is already closed")
 					}
-				} catch(org.openqa.selenium.NoSuchSessionException e) {
-					KeywordUtil.logInfo("report object is already closed")
+				} else {
+					KeywordUtil.logInfo("[PERFECTO] Reporting client wasn't initiated. Nothing to close")
 				}
 			}
 			Map<String, Object> caps = (Map<String, Object>)RunConfiguration.getDriverPreferencesProperties().get("Remote")
-			String browserName = (String)caps.get("browserName")
-//			try {
-				if(browserName=="") {
-					AppiumDriverManager.closeDriver()
-				}else {
-					WebUI.closeBrowser()
-				}
-//			}catch(Exception e) {
-//				KeywordUtil.logInfo("driver is already closed")
-//			}
+			if(caps!=null) {
+				String browserName = (String)caps.get("browserName")
+				//			try {
+								if(browserName=="") {
+									AppiumDriverManager.closeDriver()
+								}else {
+									WebUI.closeBrowser()
+								}
+				//			}catch(Exception e) {
+				//				KeywordUtil.logInfo("driver is already closed")
+				//			}
+			} else {
+				KeywordUtil.logInfo("[PERFECTO] Capabilities are empty. No browser to close")
+				
+			}
 		}
 }
